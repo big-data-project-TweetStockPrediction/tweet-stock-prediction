@@ -13,3 +13,10 @@ mkdir data
 ```python=
 python ./run_unittest.py
 ```
+
+
+#### Something you can use :+1: 
+```python=
+python .\src\tweet_score\model.py
+python .\src\tweet_score\dataLoader.py
+```
