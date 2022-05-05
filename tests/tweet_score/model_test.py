@@ -11,20 +11,21 @@ class Test_Model(unittest.TestCase):
         Test = namedtuple('Testcase', 'arg, ans')
         tests = [
             Test('#just buy', {'label': 'LABEL_1',
-                 'score': 0.9707463979721069}),
+                 'score': 0.9707}),
             Test('just sell it', {'label': 'LABEL_0',
-                 'score': 0.9894134998321533}),
+                 'score': 0.9894}),
             Test('entity rocket to the sky!', {
-                 'label': 'LABEL_1', 'score': 0.9486345052719116}),
+                 'label': 'LABEL_1', 'score': 0.9486}),
             Test('go down', {'label': 'LABEL_0',
-                 'score': 0.9953770637512207}),
+                 'score': 0.9953}),
             Test('even though it is going up, I still think it will not keep this trend in the near future', {
-                 'label': 'LABEL_0', 'score': 0.6002193689346313}),
+                 'label': 'LABEL_0', 'score': 0.6002}),
 
         ]
         for t in tests:
             res = self.Analyzer.tokenize(t.arg, needProcessed=True)
-            self.assertEqual(res[0], t.ans, 'Incorrect ans')
+            self.assertEqual(res[0]['label'], t.ans['label'], 'Incorrect ans')
+            self.assertGreaterEqual(res[0]['score'], t.ans['score'], 'Incorrect ans')
 
 
 if __name__ == '__main__':
