@@ -12,50 +12,59 @@ Analyzer = TweetAnalyzer()
 
 
 class DataLoader(object):
-    def __init__(self, readDir=None, writeDir=None, *args):
+    def __init__(self, readDir=None, resultDir=None, *args):
         super(DataLoader, self).__init__(*args)
         self.readDir = readDir
-        self.writeDir = writeDir
+        self.resultDir = resultDir
+        self.read_df = None
+        self.result_df = None
 
-    def readManyCsv(self, n=-1):
+    def readTweets(self, n=-1):
         assert self.readDir != None
         if n != -1:
             print("[NOTICE] n should set -1 if you want to all data (in readManyCsv)")
         print(" Reading CSVs [V]")
         filepaths = [self.readDir+f for f in os.listdir(
             self.readDir) if f.endswith('.csv')]
-        df = dd.read_csv(filepaths, parse_dates={'Date': ['created_at']},
-                         dtype={'owned_symbols': 'object',
-                                'reshare_message': 'object',
-                                'reshares': 'object'})
-        df = df if n == -1 else df.head(n)
-        return df
+        self.read_df = dd.read_csv(filepaths, parse_dates={'Date': ['created_at']},
+                                   dtype={'owned_symbols': 'object',
+                                          'reshare_message': 'object',
+                                          'reshares': 'object'})
+        self.read_df = self.read_df if n == -1 else self.read_df.head(n)
 
-    def labelTweets(self, data, writeOpt=False):
+    def labelTweets(self):
         print(" labeling data [V]")
-        bodyList = data['body'].tolist()
+        bodyList = self.read_df['body'].tolist()
         scoreResult = Analyzer.tokenize(bodyList, needProcessed=True)
         scoreDict = {k: [dic[k] for dic in scoreResult]
                      for k in scoreResult[0]}
         scoreDict['sentence'] = bodyList
-        data = dd.from_pandas(pd.DataFrame(data=scoreDict), npartitions=2)
+        self.result_df = dd.from_pandas(
+            pd.DataFrame(data=scoreDict), chunksize=1000)
+
+    def writeResults(self):
         print(" Writing Results [V]")
-        if writeOpt:
-            if not os.path.exists(self.writeDir):
-                os.makedirs(self.writeDir)
-            data.to_csv(self.writeDir+'TSLA_2020_2022_*.csv')
-        return data
+        if not os.path.exists(self.resultDir):
+            os.makedirs(self.resultDir)
+        self.result_df.to_csv(self.resultDir+'TSLA_2020_2022_*.csv')
+
+    def extendResults(self, col: list):
+        for c in self.result_df.columns:
+            if c in col and c not in self.result_df.columns:
+                self.result_df[c] = self.read_df[c]
 
 
 def main():
     print("=======Start========")
     TweetLoader = DataLoader(readDir="./data/TSLA_2020_2022/",
-                             writeDir="./data/TSLA_2020_2022/labeled_data/")
+                             resultDir="./data/TSLA_2020_2022/labeled_data/")
 
-    df = TweetLoader.readManyCsv(n=1000)
-    TweetLoader.labelTweets(data=df, writeOpt=True)
+    TweetLoader.readTweets(n=1000)
+    TweetLoader.labelTweets()
+    TweetLoader.extendResults("created_at,user,source,symbols".split(','))
+    print(TweetLoader.result_df.head())
     print("======= End ========")
-    print("Data shape: ", df.shape)
+    print("Data shape: ", TweetLoader.result_df.shape)
 
 
 if __name__ == '__main__':
