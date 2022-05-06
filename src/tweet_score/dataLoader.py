@@ -61,6 +61,7 @@ def main():
 
     TweetLoader.readTweets(n=1000)
     TweetLoader.labelTweets()
+    TweetLoader.writeResults()
     TweetLoader.extendResults("created_at,user,source,symbols".split(','))
     print(TweetLoader.result_df.head())
     print("======= End ========")
