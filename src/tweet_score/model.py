@@ -16,7 +16,7 @@ class TweetAnalyzer(object):
         self.nlp = pipeline("text-classification", model=model_loaded,
                             tokenizer=tokenizer_loaded)
 
-    def process_text(self, texts):
+    def process_text(self, texts: str):
         # remove URLs
         texts = re.sub(r'https?://\S+', "", texts)
         texts = re.sub(r'www.\S+', "", texts)
@@ -33,12 +33,21 @@ class TweetAnalyzer(object):
         return texts.strip()
 
     def tokenize(self, sentences: list, needProcessed=False):
+        """fit sentences to model for predicting bearish(label 0) or bullish(label 1). 
+
+        Args:
+            sentences (list): sentences we want to predict.
+            needProcessed (bool, optional): If you want process some meaningless symbol or link in sentence, you should set True. Defaults to False.
+
+        Returns:
+            list: labeled results with sentences
+        """
         sentences = pd.Series(sentences)
         # if input text contains https, @ or # or $ symbols, better apply preprocess to get a more accurate result
         sentences = list(sentences.apply(self.process_text)
                          ) if needProcessed else list(sentences)
         results = self.nlp(sentences)
-        return results  # 2 labels, label 0 is bearish, label 1 is bullish
+        return results
 
 
 if __name__ == '__main__':

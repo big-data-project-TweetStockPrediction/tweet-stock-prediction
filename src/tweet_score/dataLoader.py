@@ -1,5 +1,4 @@
 # load tweets data and use model to predict score
-# import necessary libraries
 import pandas as pd
 import os
 from model import TweetAnalyzer
