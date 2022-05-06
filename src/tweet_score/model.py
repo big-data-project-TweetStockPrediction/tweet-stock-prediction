@@ -1,4 +1,3 @@
-from msilib.schema import Class
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
 from transformers import pipeline
 import pandas as pd
