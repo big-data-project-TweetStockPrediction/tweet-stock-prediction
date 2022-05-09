@@ -1,9 +1,11 @@
 from transformers import RobertaForSequenceClassification, RobertaTokenizer
 from transformers import pipeline
 import pandas as pd
+from dask import dataframe as dd
 import emoji
 import re
 import pprint
+from tqdm import tqdm
 # the model was trained upon below preprocessing
 
 
@@ -32,8 +34,21 @@ class TweetAnalyzer(object):
         # print(texts.strip())
         return texts.strip()
 
-    def tokenize(self, sentences: list, needProcessed=False):
-        """fit sentences to model for predicting bearish(label 0) or bullish(label 1). 
+    def batchSentences(self, sentences: pd.DataFrame, batch_size=512):
+        seq = []
+        idx = []
+
+        for _, row in sentences.iterrows():
+            seq.append(row["body"])
+            idx.append(row["id"])
+            if len(seq) == batch_size:
+                yield idx, seq
+                seq = []
+                idx = []
+        yield idx, seq
+
+    def batchTokenize(self, df: pd.DataFrame, batch_size=512, needProcessed=False):
+        """fit sentences to model for predicting bearish(label 0) or bullish(label 1).
 
         Args:
             sentences (list): sentences we want to predict.
@@ -42,15 +57,25 @@ class TweetAnalyzer(object):
         Returns:
             list: labeled results with sentences
         """
-        sentences = pd.Series(sentences)
-        # if input text contains https, @ or # or $ symbols, better apply preprocess to get a more accurate result
-        sentences = list(sentences.apply(self.process_text)
-                         ) if needProcessed else list(sentences)
-        results = self.nlp(sentences)
-        return results
+        with tqdm(total=int(len(df)/batch_size)) as pbar:
+            for idx, seq in self.batchSentences(df, batch_size):
+                pbar.update(1)
+                series = pd.Series(seq)
+                sents = list(
+                    series.apply(self.process_text)
+                ) if needProcessed else list(sents)
+                results = self.nlp(sents)
+                scoreDict = {
+                    k: [dic[k] for dic in results]
+                    for k in results[0]
+                }
+                scoreDict["sentences"] = seq
+                scoreDict["id"] = idx
+                yield dd.from_pandas(pd.DataFrame(data=scoreDict), chunksize=512).set_index("id")
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
+def main():
     Analyzer = TweetAnalyzer()
     tweets = ['#just buy', 'just sell it',
               'entity rocket to the sky!',
