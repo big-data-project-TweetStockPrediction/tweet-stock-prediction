@@ -39,7 +39,7 @@ class TweetAnalyzer(object):
         idx = []
 
         for _, row in sentences.iterrows():
-            seq.append(row["body"])
+            seq.append(' '.join(row["body"].split(' ')[:400]))
             idx.append(row["id"])
             if len(seq) == batch_size:
                 yield idx, seq
@@ -77,8 +77,12 @@ class TweetAnalyzer(object):
 # if __name__ == '__main__':
 def main():
     Analyzer = TweetAnalyzer()
-    tweets = ['#just buy', 'just sell it',
-              'entity rocket to the sky!',
-              'go down', 'even though it is going up, I still think it will not keep this trend in the near future']
-    res = Analyzer.tokenize(tweets, needProcessed=True)
-    pprint.pprint(res)
+    tweets = ['even though it is going up, I still think it will not keep this trend in the near future even though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near futureeven though it is going up, I still think it will not keep this trend in the near future']
+    for idx, t in enumerate(tweets):
+        tweets[idx] = ' '.join(t.split(" ")[:400])
+    results = Analyzer.nlp(tweets)
+    pprint.pprint(results)
+
+
+if __name__ == '__main__':
+    main()
