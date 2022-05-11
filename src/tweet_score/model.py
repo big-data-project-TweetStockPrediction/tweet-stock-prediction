@@ -16,7 +16,7 @@ class TweetAnalyzer(object):
         model_loaded = RobertaForSequenceClassification.from_pretrained(
             modelName)
         self.nlp = pipeline("text-classification", model=model_loaded,
-                            tokenizer=tokenizer_loaded)
+                            tokenizer=tokenizer_loaded, device=0, max_length=512, truncation=True)
 
     def process_text(self, texts: str):
         # remove URLs
@@ -64,6 +64,7 @@ class TweetAnalyzer(object):
                 sents = list(
                     series.apply(self.process_text)
                 ) if needProcessed else list(sents)
+                
                 results = self.nlp(sents)
                 scoreDict = {
                     k: [dic[k] for dic in results]
