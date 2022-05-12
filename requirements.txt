@@ -9,15 +9,30 @@ certifi==2021.10.8
 charset-normalizer==2.0.12
     # via requests
 click==8.1.3
-    # via sacremoses
+    # via
+    #   distributed
+    #   sacremoses
 cloudpickle==2.0.0
-    # via dask
+    # via
+    #   dask
+    #   dask-glm
+    #   distributed
 cycler==0.11.0
     # via matplotlib
-dask==2022.5.0
+dask[array,dataframe]==2022.5.0
+    # via
+    #   -r requirements.in
+    #   dask-glm
+    #   dask-ml
+    #   distributed
+dask-glm==0.2.0
+    # via dask-ml
+dask-ml==2022.1.22
     # via -r requirements.in
 decorator==5.1.1
     # via ffn
+distributed==2022.5.0
+    # via dask-ml
 emoji==1.7.0
     # via -r requirements.in
 ffn==0.3.6
@@ -32,26 +47,47 @@ fsspec==2022.3.0
     # via dask
 future==0.18.2
     # via ffn
+heapdict==1.0.1
+    # via zict
 huggingface-hub==0.5.1
     # via transformers
 idna==3.3
     # via requests
+jinja2==3.1.2
+    # via distributed
 joblib==1.1.0
     # via
     #   sacremoses
     #   scikit-learn
 kiwisolver==1.4.2
     # via matplotlib
+llvmlite==0.38.0
+    # via numba
 locket==1.0.0
-    # via partd
+    # via
+    #   distributed
+    #   partd
 lxml==4.8.0
     # via pandas-datareader
+markupsafe==2.1.1
+    # via jinja2
 matplotlib==3.5.2
     # via ffn
-numpy==1.22.3
+msgpack==1.0.3
+    # via distributed
+multipledispatch==0.6.0
     # via
+    #   dask-glm
+    #   dask-ml
+numba==0.55.1
+    # via dask-ml
+numpy==1.21.6
+    # via
+    #   dask
+    #   dask-ml
     #   ffn
     #   matplotlib
+    #   numba
     #   pandas
     #   scikit-learn
     #   scipy
@@ -59,12 +95,16 @@ numpy==1.22.3
 packaging==21.3
     # via
     #   dask
+    #   dask-ml
+    #   distributed
     #   huggingface-hub
     #   matplotlib
     #   transformers
 pandas==1.4.2
     # via
     #   -r requirements.in
+    #   dask
+    #   dask-ml
     #   ffn
     #   pandas-datareader
 pandas-datareader==0.10.0
@@ -73,6 +113,8 @@ partd==1.2.0
     # via dask
 pillow==9.1.0
     # via matplotlib
+psutil==5.9.0
+    # via distributed
 pyparsing==3.0.8
     # via
     #   matplotlib
@@ -86,6 +128,7 @@ pytz==2022.1
 pyyaml==6.0
     # via
     #   dask
+    #   distributed
     #   huggingface-hub
     #   transformers
 regex==2022.4.24
@@ -100,17 +143,30 @@ requests==2.27.1
 sacremoses==0.0.53
     # via transformers
 scikit-learn==1.1.0
-    # via ffn
+    # via
+    #   dask-glm
+    #   dask-ml
+    #   ffn
+    #   sklearn
 scipy==1.8.0
     # via
+    #   dask-glm
+    #   dask-ml
     #   ffn
     #   scikit-learn
 six==1.16.0
     # via
+    #   multipledispatch
     #   python-dateutil
     #   sacremoses
+sklearn==0.0
+    # via -r requirements.in
+sortedcontainers==2.4.0
+    # via distributed
 tabulate==0.8.9
     # via ffn
+tblib==1.7.0
+    # via distributed
 threadpoolctl==3.1.0
     # via scikit-learn
 tokenizers==0.12.1
@@ -118,7 +174,10 @@ tokenizers==0.12.1
 toolz==0.11.2
     # via
     #   dask
+    #   distributed
     #   partd
+tornado==6.1
+    # via distributed
 tqdm==4.64.0
     # via
     #   huggingface-hub
@@ -129,4 +188,11 @@ transformers==4.18.0
 typing-extensions==4.2.0
     # via huggingface-hub
 urllib3==1.26.9
-    # via requests
+    # via
+    #   distributed
+    #   requests
+zict==2.2.0
+    # via distributed
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

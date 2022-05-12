@@ -3,4 +3,5 @@ pandas
 emoji
 dask
 ffn
-
+sklearn
+dask-ml
