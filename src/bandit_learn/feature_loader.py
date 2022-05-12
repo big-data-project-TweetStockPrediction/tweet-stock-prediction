@@ -15,6 +15,8 @@ class FeatureLoader():
         self.featuresDir = featuresDir
         self.n_features = n_features
         self.n_arms = n_arms
+        self.df = None
+        self.scaled_df = None
         
     def scaleData(self, standard_scale_columns, min_max_scale_columns):
         self.df = dd.read_csv(self.datasetDir)
@@ -34,14 +36,14 @@ class FeatureLoader():
         #     "reshare",
         # ]
         standard_scaler = StandardScaler()
-        scaled_df = dd.DataFrame()
+        self.scaled_df = dd.DataFrame()
         for col in standard_scale_columns:
-            scaled_df[col] = standard_scaler.fit_transform(self.df[col])
+            self.scaled_df[col] = standard_scaler.fit_transform(self.df[col])
         
         # min_max_scale_columns = ["user.join_date"]
         minmaxscaler = MinMaxScaler()
         for col in min_max_scale_columns:
-            scaled_df[col] = minmaxscaler.fit_transform(self.df[col])
+            self.scaled_df[col] = minmaxscaler.fit_transform(self.df[col])
 
     def createFeatures(self):
         pass
