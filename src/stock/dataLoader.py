@@ -36,11 +36,11 @@ if __name__ == '__main__':
     stockLoader = StockLoader('TSLA')
     stockLoader.LoadStock(columns=['Open', 'High', 'Low',
                                    'Close'],
-                          start='2013-01-01', end='2015-01-01',
+                          start='2020-08-21', end='2020-09-02',
                           dir='./data/TSLA_2020_2022/stock_data/')
     print('Many cool stats: ')
     stockLoader.PrintStat()
     print('Stock shape: ', stockLoader.df.shape)
     print('Stock Columns: ', list(stockLoader.df.columns))
     print('Get return in a period: ', stockLoader.GetRateFromPeriod(
-        start='2021-04-03', end='2021-04-08'))
+        start='2012-01-01', end='2022-05-01'))
