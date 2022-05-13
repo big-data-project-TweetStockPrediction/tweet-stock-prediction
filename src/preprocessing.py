@@ -1,8 +1,10 @@
 import re
+from turtle import st
 
 import emoji
 from tweet_score.dataLoader import DataLoader
 from tweet_score.model import TweetAnalyzer
+from bandit_learn.feature_loader import FeatureLoader
 from datetime import datetime
 from helper import Only_dict
 # Selected Column
@@ -202,10 +204,40 @@ def preprocessing():
         pre.writeResults()
     pre.printInfo()
 
+def create_features():
+    featureloader = FeatureLoader(
+        datasetDir="./data/TSLA_2020_2022/processed_data/",
+        featuresDir="./data/TSLA_2020_2022/features_test/",
+        n_arms=10,
+        n_features=10
+    )
+    featureloader.loadData()
+    featureloader.modifyDataType(
+        cols=["user.official", "reshare"], dataType="int64"
+    )
+    featureloader.scaleData(
+        standard_scale_columns=[
+            "user.official",
+            "user.followers",
+            "user.following",
+            "user.ideas",
+            "user.watchlist_stocks_count",
+            "user.like_count",
+            "likes.total",
+            "conversation.replies",
+            "reshare",
+        ],
+        min_max_scale_columns=["user.join_date"],
+        other_columns=["Date", "label", "score"],
+    )
+    featureloader.createFeatures()
+    featureloader.writeFeatures()
+
 
 if __name__ == '__main__':
     start_time = datetime.now()
     # tweet()
-    preprocessing()
+    # preprocessing()
+    create_features()
     end_time = datetime.now()
     print("Duration: {}".format(end_time - start_time))
