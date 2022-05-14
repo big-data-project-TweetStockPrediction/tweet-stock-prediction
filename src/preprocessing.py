@@ -1,6 +1,4 @@
 import re
-from turtle import st
-
 import emoji
 from tweet_score.dataLoader import DataLoader
 from tweet_score.model import TweetAnalyzer
@@ -228,7 +226,7 @@ def create_features():
             "reshare",
         ],
         min_max_scale_columns=["user.join_date"],
-        other_columns=["Date", "label", "score"],
+        other_columns=["label", "score", "Date"],
     )
     featureloader.createFeatures()
     featureloader.writeFeatures()

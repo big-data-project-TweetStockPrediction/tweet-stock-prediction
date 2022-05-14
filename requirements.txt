@@ -150,6 +150,7 @@ scikit-learn==1.1.0
     #   sklearn
 scipy==1.8.0
     # via
+    #   -r requirements.in
     #   dask-glm
     #   dask-ml
     #   ffn

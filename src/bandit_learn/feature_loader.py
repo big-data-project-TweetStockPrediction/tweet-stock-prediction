@@ -3,6 +3,8 @@ import os
 import dask.dataframe as dd
 import pandas as pd
 from dask_ml.preprocessing import StandardScaler, MinMaxScaler
+# issue should be fixed : https://github.com/dask/dask-ml/issues/908
+# modify file follow https://github.com/dask/dask-ml/pull/910/files
 
 class FeatureLoader():
     def __init__(
@@ -20,7 +22,8 @@ class FeatureLoader():
         self.scaled_df = None
 
     def loadData(self):
-        self.df = dd.read_csv(self.datasetDir)
+        # self.df = dd.read_csv(self.datasetDir + "*.csv")
+        self.df = dd.read_csv(self.datasetDir + "TSLA_2020_2022_000.csv")
 
     def modifyDataType(self, cols: list, dataType: str):
         # self.df["user.official"] = self.df["user.official"].astype("int64")
@@ -28,12 +31,13 @@ class FeatureLoader():
         for col in cols:
             self.df[col] = self.df[col].astype(dataType)
         
-    def scaleData(self,
+    def scaleData(
+        self,
         standard_scale_columns,
         min_max_scale_columns,
         other_columns,
     ):
-        self.scaled_df = dd.DataFrame()
+        self.scaled_df = dd.from_pandas(pd.DataFrame([]), npartitions=1000)
 
         # standard_scale_columns = [
         #     "user.official",
@@ -47,27 +51,28 @@ class FeatureLoader():
         #     "reshare",
         # ]
         standard_scaler = StandardScaler()
-        for col in standard_scale_columns:
-            self.scaled_df[col] = standard_scaler.fit_transform(self.df[col])
+        self.scaled_df[standard_scale_columns] = standard_scaler.fit_transform(self.df[standard_scale_columns])
         
         # min_max_scale_columns = ["user.join_date"]
         minmaxscaler = MinMaxScaler()
-        for col in min_max_scale_columns:
-            self.scaled_df[col] = minmaxscaler.fit_transform(self.df[col])
+        self.scaled_df[min_max_scale_columns] = minmaxscaler.fit_transform(self.df[min_max_scale_columns])
 
         # other_columns = ["Date", "label", "score"]
-        for col in other_columns:
-            self.scaled_df[col] = self.df[col]
+        self.scaled_df[other_columns] = self.df[other_columns]
+
+        if "Date" in self.scaled_df.columns:
+            self.scaled_df["Date"] = dd.to_datetime(self.scaled_df["Date"])
 
     def createFeatures(self):
-        start_date = pd.to_datetime("03-01-2020")
-        end_date = pd.to_datetime("03-02-2022")
-        self.features_df =  dd.DataFrame()
-        for date in pd.date_range(start=start_date, end=end_date, dtype="datetime64[ns, UTC]"):
-            date_df: dd.DataFrame = self.scaled_df[self.scaled_df["Date"] == date]
+        start_date = pd.to_datetime("12-21-2019")
+        end_date = pd.to_datetime("05-14-2022")
+        self.features_df = dd.from_pandas(pd.DataFrame([]), npartitions=1000)
+        for date in pd.date_range(start=start_date, end=end_date):
+            date_df: pd.DataFrame = self.scaled_df[self.scaled_df["Date"].dt.date == date].compute()
             date_df = date_df.loc[:, date_df.columns != "Date"]
-            
-            rows: np.ndarray = date_df.to_numpy()
+            rows = date_df.to_numpy()
+            if len(rows) == 0:
+                continue
             rand_indices = np.random.randint(
                 rows.shape[0],
                 size=self.n_arms - rows.shape[0] % self.n_arms

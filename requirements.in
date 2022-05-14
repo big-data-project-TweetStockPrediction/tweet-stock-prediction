@@ -5,3 +5,4 @@ dask
 ffn
 sklearn
 dask-ml
+scipy
