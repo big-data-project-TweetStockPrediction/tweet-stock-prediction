@@ -1,9 +1,11 @@
+from cmath import inf
 import numpy as np
 import itertools
 import random
 import torch
 from .feature_loader import FeatureLoader
-from ..stock.dataLoader import StockLoader
+from stock.dataLoader import StockLoader
+from datetime import datetime, timedelta
 
 
 class ContextualBandit():
@@ -58,8 +60,17 @@ class ContextualBandit():
             self.reset_features()
             self.reset_rewards()
 
-    def get_reward(self, index):
-        pass
+    def get_rewards(self, index):
+        date = datetime.strftime(self.dates[index].compute(), "%Y-%m-%d")
+        previous_date = date - timedelta(1)
+        rate = self.stock_loader.GetRateFromPeriod(start=previous_date, end=date)
+        while rate == 0:
+            previous_date -= timedelta(1)
+            rate = self.stock_loader.GetRateFromPeriod(start=previous_date, end=date)
+        confidence = np.array(self.confidence[index].compute())
+        inference = np.array(self.inference[index].compute())
+        inference = np.array([1 if inf == "LABEL_1" else -1 for inf in inference])
+        return inference * confidence * rate
 
     def reset_features(self):
         """Generate normalized random N(0,1) features.

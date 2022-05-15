@@ -13,6 +13,8 @@ featureloader.loadFeatures()
 features = featureloader.features_df["features"].values.compute_chunk_sizes()
 inference = featureloader.features_df["inference"].values.compute_chunk_sizes()
 confidence = featureloader.features_df["confidence"].values.compute_chunk_sizes()
+date = featureloader.features_df["date"].values.compute_chunk_sizes()
+print(date[0].compute())
 for i in range(10):
     print(features[0].compute()[i])
     print(inference[0].compute()[i])
