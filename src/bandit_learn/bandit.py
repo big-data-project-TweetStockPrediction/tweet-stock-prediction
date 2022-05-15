@@ -2,6 +2,8 @@ import numpy as np
 import itertools
 import random
 import torch
+from .feature_loader import FeatureLoader
+from ..stock.dataLoader import StockLoader
 
 
 class ContextualBandit():
@@ -12,6 +14,8 @@ class ContextualBandit():
                  h,
                  noise_std=1.0,
                  seed=None,
+                 feature_loader: FeatureLoader=None,
+                 stock_loader: StockLoader=None,
                  ):
         # if not None, freeze seed for reproducibility
         self._seed(seed)
@@ -29,6 +33,9 @@ class ContextualBandit():
         # standard deviation of Gaussian reward noise
         self.noise_std = noise_std
 
+        self.feature_loader = feature_loader
+        self.stock_loader = stock_loader
+
         # generate random features
         self.reset()
 
@@ -41,8 +48,18 @@ class ContextualBandit():
     def reset(self):
         """Generate new features and new rewards.
         """
-        self.reset_features()
-        self.reset_rewards()
+        if self.feature_loader:
+            self.feature_loader.loadFeatures()
+            self.features = self.feature_loader.features_df["features"].values.compute_chunk_sizes()
+            self.inference = self.feature_loader.features_df["inference"].values.compute_chunk_sizes()
+            self.confidence = self.feature_loader.features_df["confidence"].values.compute_chunk_sizes()
+            self.dates = self.feature_loader.features_df["Date"].values.compute_chunk_sizes()
+        else:
+            self.reset_features()
+            self.reset_rewards()
+
+    def get_reward(self, index):
+        pass
 
     def reset_features(self):
         """Generate normalized random N(0,1) features.

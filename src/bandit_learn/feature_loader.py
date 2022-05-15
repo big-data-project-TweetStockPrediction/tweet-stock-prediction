@@ -20,6 +20,8 @@ class FeatureLoader():
         self.n_arms = n_arms
         self.df = None
         self.scaled_df = None
+        self.features_df = None
+        self.T = None
 
     def loadData(self):
         # self.df = dd.read_csv(self.datasetDir + "*.csv")
@@ -114,5 +116,21 @@ class FeatureLoader():
         )
 
     def loadFeatures(self):
-        self.features_df = dd.read_csv(self.featuresDir)
+        float_converter = lambda x: np.array(
+            x.translate({ord(c):None for c in "[]"}) \
+            .replace("\n", "") \
+            .replace("  ", " ") \
+            .split(" "),
+            dtype=float
+        ).reshape(self.n_arms, -1)
+        str_converter = lambda x: np.array(x.translate({ord(c):None for c in "'[]"}).split(" "))
+        self.features_df = dd.read_csv(
+            self.featuresDir + "*.csv",
+            converters={
+                "features": float_converter,
+                "inference": str_converter,
+                "confidence": float_converter,
+            }
+        )
+        self.T = len(self.features_df.index)
 
