@@ -18,7 +18,7 @@ class LinUCB(UCB):
         self.bound_theta = bound_theta
 
         # maximum L2 norm for the features across all arms and all rounds
-        self.bound_features = np.max(np.linalg.norm(bandit.features, ord=2, axis=-1))
+        self.bound_features = np.max(np.linalg.norm(bandit.features.compute(), ord=2, axis=-1))
 
         super().__init__(bandit,
                          reg_factor=reg_factor,
@@ -36,7 +36,7 @@ class LinUCB(UCB):
     def update_output_gradient(self):
         """For linear approximators, simply returns the features.
         """
-        self.grad_approx = self.bandit.features[self.iteration]
+        self.grad_approx = self.bandit.features[self.iteration].compute()
 
     def reset(self):
         """Return the internal estimates
@@ -78,13 +78,13 @@ class LinUCB(UCB):
             ]
         )
 
-        self.b[self.action] += self.bandit.features[self.iteration, self.action]*self.bandit.rewards[self.iteration, self.action]
+        self.b[self.action] += np.array(self.bandit.features[self.iteration].compute()[self.action])*self.bandit.rewards[self.iteration].compute()[self.action]
 
     def predict(self):
         """Predict reward.
         """
         self.mu_hat[self.iteration] = np.array(
             [
-                np.dot(self.bandit.features[self.iteration, a], self.theta[a]) for a in self.bandit.arms
+                np.dot(np.array(self.bandit.features[self.iteration].compute()[a]), self.theta[a]) for a in self.bandit.arms
             ]
         )

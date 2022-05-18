@@ -6,3 +6,4 @@ ffn
 sklearn
 dask-ml
 scipy
+seaborn

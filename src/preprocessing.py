@@ -205,7 +205,7 @@ def preprocessing():
 def create_features():
     featureloader = FeatureLoader(
         datasetDir="./data/TSLA_2020_2022/processed_data/",
-        featuresDir="./data/TSLA_2020_2022/features_test/",
+        featuresDir="./data/TSLA_2020_2022/features/",
         n_arms=10,
         n_features=10
     )

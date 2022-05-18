@@ -25,7 +25,7 @@ class FeatureLoader():
 
     def loadData(self):
         # self.df = dd.read_csv(self.datasetDir + "*.csv")
-        self.df = dd.read_csv(self.datasetDir + "TSLA_2020_2022_000.csv")
+        self.df = dd.read_csv(self.datasetDir + "*.csv")
 
     def modifyDataType(self, cols: list, dataType: str):
         # self.df["user.official"] = self.df["user.official"].astype("int64")
@@ -39,7 +39,7 @@ class FeatureLoader():
         min_max_scale_columns,
         other_columns,
     ):
-        self.scaled_df = dd.from_pandas(pd.DataFrame([]), npartitions=1000)
+        self.scaled_df = self.df[standard_scale_columns + min_max_scale_columns + other_columns]
 
         # standard_scale_columns = [
         #     "user.official",
@@ -68,7 +68,7 @@ class FeatureLoader():
     def createFeatures(self):
         start_date = pd.to_datetime("12-21-2019")
         end_date = pd.to_datetime("05-14-2022")
-        self.features_df = dd.from_pandas(pd.DataFrame([]), npartitions=1000)
+        self.features_df = dd.from_pandas(pd.DataFrame([]), npartitions=3)
         for date in pd.date_range(start=start_date, end=end_date):
             date_df: pd.DataFrame = self.scaled_df[self.scaled_df["Date"].dt.date == date].compute()
             date_df = date_df.loc[:, date_df.columns != "Date"]

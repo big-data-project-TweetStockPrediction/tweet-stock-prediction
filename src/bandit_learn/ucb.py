@@ -2,13 +2,14 @@ import numpy as np
 import abc
 from tqdm import tqdm
 from .utils import inv_sherman_morrison
+from .bandit import ContextualBandit
 
 
 class UCB(abc.ABC):
     """Base class for UBC methods.
     """
     def __init__(self,
-                 bandit,
+                 bandit: ContextualBandit,
                  reg_factor=1.0,
                  confidence_scaling_factor=-1.0,
                  delta=0.1,
@@ -157,14 +158,14 @@ class UCB(abc.ABC):
                 # update exploration indicator A_inv
                 self.update_A_inv()
                 # compute regret
-                self.regrets[t] = self.bandit.best_rewards_oracle[t]-self.bandit.rewards[t, self.action]
+                self.regrets[t] = self.bandit.best_rewards_oracle[t].compute()-self.bandit.rewards[t].compute()[self.action]
                 # increment counter
                 self.iteration += 1
 
                 # log
                 postfix['total regret'] += self.regrets[t]
                 n_optimal_arm = np.sum(
-                    self.actions[:self.iteration] == self.bandit.best_actions_oracle[:self.iteration]
+                    self.actions[:self.iteration] == self.bandit.best_actions_oracle[:self.iteration].compute()
                 )
                 postfix['% optimal arm'] = '{:.2%}'.format(n_optimal_arm / self.iteration)
 

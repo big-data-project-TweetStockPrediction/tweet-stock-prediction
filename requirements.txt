@@ -72,7 +72,9 @@ lxml==4.8.0
 markupsafe==2.1.1
     # via jinja2
 matplotlib==3.5.2
-    # via ffn
+    # via
+    #   ffn
+    #   seaborn
 msgpack==1.0.3
     # via distributed
 multipledispatch==0.6.0
@@ -91,6 +93,7 @@ numpy==1.21.6
     #   pandas
     #   scikit-learn
     #   scipy
+    #   seaborn
     #   transformers
 packaging==21.3
     # via
@@ -107,6 +110,7 @@ pandas==1.4.2
     #   dask-ml
     #   ffn
     #   pandas-datareader
+    #   seaborn
 pandas-datareader==0.10.0
     # via ffn
 partd==1.2.0
@@ -155,6 +159,9 @@ scipy==1.8.0
     #   dask-ml
     #   ffn
     #   scikit-learn
+    #   seaborn
+seaborn==0.11.2
+    # via -r requirements.in
 six==1.16.0
     # via
     #   multipledispatch

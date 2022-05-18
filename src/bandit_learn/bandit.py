@@ -1,4 +1,3 @@
-from cmath import inf
 import numpy as np
 import itertools
 import random
@@ -6,6 +5,7 @@ import torch
 from .feature_loader import FeatureLoader
 from stock.dataLoader import StockLoader
 from datetime import datetime, timedelta
+import dask.array as da
 
 
 class ContextualBandit():
@@ -13,7 +13,7 @@ class ContextualBandit():
                  T,
                  n_arms,
                  n_features,
-                 h,
+                 h=None,
                  noise_std=1.0,
                  seed=None,
                  feature_loader: FeatureLoader=None,
@@ -55,22 +55,39 @@ class ContextualBandit():
             self.features = self.feature_loader.features_df["features"].values.compute_chunk_sizes()
             self.inference = self.feature_loader.features_df["inference"].values.compute_chunk_sizes()
             self.confidence = self.feature_loader.features_df["confidence"].values.compute_chunk_sizes()
-            self.dates = self.feature_loader.features_df["Date"].values.compute_chunk_sizes()
+            self.dates = self.feature_loader.features_df["date"].values.compute_chunk_sizes()
+            self.rate = dict()
+            self.rewards = da.concatenate(
+                [
+                    self.get_rewards(i) for i in range(self.T)
+                ],
+                axis=0,
+            )
+            self.best_rewards_oracle = da.max(self.rewards, axis=1)
+            self.best_actions_oracle = da.argmax(self.rewards, axis=1)
         else:
             self.reset_features()
             self.reset_rewards()
 
     def get_rewards(self, index):
-        date = datetime.strftime(self.dates[index].compute(), "%Y-%m-%d")
-        previous_date = date - timedelta(1)
-        rate = self.stock_loader.GetRateFromPeriod(start=previous_date, end=date)
-        while rate == 0:
-            previous_date -= timedelta(1)
-            rate = self.stock_loader.GetRateFromPeriod(start=previous_date, end=date)
+        date_str = self.dates[index].compute()
+        date = datetime.strptime(date_str, "%Y-%m-%d")
+        if date_str not in self.rate:
+            previous_date = date - timedelta(1)
+            try:
+                self.rate[date_str] = self.stock_loader.GetRateFromPeriod(start=previous_date.strftime("%Y-%m-%d"), end=date_str)
+            except KeyError:
+                self.rate[date_str] = 0
+            while self.rate[date_str] == 0:
+                previous_date -= timedelta(1)
+                try:
+                    self.rate[date_str] = self.stock_loader.GetRateFromPeriod(start=previous_date.strftime("%Y-%m-%d"), end=date_str)
+                except KeyError:
+                    self.rate[date_str] = 0
         confidence = np.array(self.confidence[index].compute())
         inference = np.array(self.inference[index].compute())
         inference = np.array([1 if inf == "LABEL_1" else -1 for inf in inference])
-        return inference * confidence * rate
+        return da.from_array(inference * confidence * self.rate[date_str])
 
     def reset_features(self):
         """Generate normalized random N(0,1) features.
