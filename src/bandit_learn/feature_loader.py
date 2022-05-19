@@ -25,13 +25,9 @@ class FeatureLoader():
         self.features_df = None
         self.T = None
 
-    def loadData(self, n: Union[float, int]):
+    def loadData(self):
         # self.df = dd.read_csv(self.datasetDir + "*.csv")
         self.df = dd.read_csv(self.datasetDir + "*.csv")
-        if type(n) == float:
-            self.df.sample(frac=n)
-        else:
-            self.df.sample(n=n)
 
     def modifyDataType(self, cols: list, dataType: str):
         # self.df["user.official"] = self.df["user.official"].astype("int64")
@@ -121,7 +117,7 @@ class FeatureLoader():
             os.path.join(self.featuresDir+"TSLA_2020_2022_*.csv")
         )
 
-    def loadFeatures(self):
+    def loadFeatures(self, n: Union[float, int]):
         float_converter = lambda x: np.array(
             x.translate({ord(c):None for c in "[]"}) \
             .replace("\n", "") \
@@ -138,5 +134,9 @@ class FeatureLoader():
                 "confidence": float_converter,
             }
         )
+        if type(n) == float:
+            self.features_df.sample(frac=n)
+        else:
+            self.features_df.sample(n=n)
         self.T = len(self.features_df.index)
 
