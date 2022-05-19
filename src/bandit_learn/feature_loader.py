@@ -3,6 +3,8 @@ import os
 import dask.dataframe as dd
 import pandas as pd
 from dask_ml.preprocessing import StandardScaler, MinMaxScaler
+from typing import Union
+
 # issue should be fixed : https://github.com/dask/dask-ml/issues/908
 # modify file follow https://github.com/dask/dask-ml/pull/910/files
 
@@ -23,9 +25,13 @@ class FeatureLoader():
         self.features_df = None
         self.T = None
 
-    def loadData(self):
+    def loadData(self, n: Union[float, int]):
         # self.df = dd.read_csv(self.datasetDir + "*.csv")
         self.df = dd.read_csv(self.datasetDir + "*.csv")
+        if type(n) == float:
+            self.df.sample(frac=n)
+        else:
+            self.df.sample(n=n)
 
     def modifyDataType(self, cols: list, dataType: str):
         # self.df["user.official"] = self.df["user.official"].astype("int64")

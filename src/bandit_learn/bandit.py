@@ -1,3 +1,4 @@
+from curses import meta
 import numpy as np
 import itertools
 import random
@@ -6,6 +7,10 @@ from .feature_loader import FeatureLoader
 from stock.dataLoader import StockLoader
 from datetime import datetime, timedelta
 import dask.array as da
+import pandas as pd
+import dask.dataframe as dd
+from dask.diagnostics import ProgressBar
+from tqdm import tqdm
 
 
 class ContextualBandit():
@@ -18,6 +23,7 @@ class ContextualBandit():
                  seed=None,
                  feature_loader: FeatureLoader=None,
                  stock_loader: StockLoader=None,
+                 days=1
                  ):
         # if not None, freeze seed for reproducibility
         self._seed(seed)
@@ -37,6 +43,7 @@ class ContextualBandit():
 
         self.feature_loader = feature_loader
         self.stock_loader = stock_loader
+        self.days = days
 
         # generate random features
         self.reset()
@@ -50,44 +57,56 @@ class ContextualBandit():
     def reset(self):
         """Generate new features and new rewards.
         """
-        if self.feature_loader:
-            self.feature_loader.loadFeatures()
-            self.features = self.feature_loader.features_df["features"].values.compute_chunk_sizes()
-            self.inference = self.feature_loader.features_df["inference"].values.compute_chunk_sizes()
-            self.confidence = self.feature_loader.features_df["confidence"].values.compute_chunk_sizes()
-            self.dates = self.feature_loader.features_df["date"].values.compute_chunk_sizes()
-            self.rate = dict()
-            self.rewards = da.concatenate(
-                [
-                    self.get_rewards(i) for i in range(self.T)
-                ],
-                axis=0,
+
+        def handle_partition_max(s):
+            result = s.apply(
+                lambda row: max(row)
             )
-            self.best_rewards_oracle = da.max(self.rewards, axis=1)
-            self.best_actions_oracle = da.argmax(self.rewards, axis=1)
+            return result
+
+        def handle_partition_argmax(s):
+            result = s.apply(
+                lambda row: np.argmax(row)
+            )
+            return result
+        
+        if self.feature_loader:
+
+            with ProgressBar():
+                self.features = self.feature_loader.features_df["features"].values.compute_chunk_sizes()
+                self.dates = self.feature_loader.features_df["date"].values.compute_chunk_sizes()
+                self.get_rewards()
+                self.rewards = self.rewards_series.values.compute_chunk_sizes()
+                self.best_rewards_oracle = self.rewards_series.map_partitions(
+                    lambda s: handle_partition_max(s),
+                    meta=(None, 'f8'),
+                ).values.compute_chunk_sizes()
+                self.best_actions_oracle = self.rewards_series.map_partitions(
+                    lambda s: handle_partition_argmax(s),
+                    meta=(None, 'f8'),
+                ).values.compute_chunk_sizes()
         else:
             self.reset_features()
             self.reset_rewards()
 
-    def get_rewards(self, index):
-        date_str = self.dates[index].compute()
-        date = datetime.strptime(date_str, "%Y-%m-%d")
-        if date_str not in self.rate:
-            previous_date = date - timedelta(1)
-            try:
-                self.rate[date_str] = self.stock_loader.GetRateFromPeriod(start=previous_date.strftime("%Y-%m-%d"), end=date_str)
-            except KeyError:
-                self.rate[date_str] = 0
-            while self.rate[date_str] == 0:
-                previous_date -= timedelta(1)
-                try:
-                    self.rate[date_str] = self.stock_loader.GetRateFromPeriod(start=previous_date.strftime("%Y-%m-%d"), end=date_str)
-                except KeyError:
-                    self.rate[date_str] = 0
-        confidence = np.array(self.confidence[index].compute())
-        inference = np.array(self.inference[index].compute())
-        inference = np.array([1 if inf == "LABEL_1" else -1 for inf in inference])
-        return da.from_array(inference * confidence * self.rate[date_str])
+    def get_rewards(self):
+        print("get rewards ...")
+        def handle_inf(row) -> np.ndarray:
+            # do something with row
+            confidence = np.array(row.confidence, dtype=float).reshape(-1)
+            inference = np.array([1 if inf == "LABEL_1" else -1 for inf in row.inference])
+            return inference * confidence * self.stock_loader.df.loc[row.date,'close_rate']
+
+        def handle_partition(df):
+            result = df.apply(
+                lambda row: handle_inf(row), axis=1,
+            )
+            return result
+        
+        self.rewards_series = self.feature_loader.features_df.map_partitions(
+            lambda df: handle_partition(df),
+            meta=(None, 'object'),
+        )
 
     def reset_features(self):
         """Generate normalized random N(0,1) features.
