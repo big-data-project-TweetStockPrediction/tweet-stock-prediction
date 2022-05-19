@@ -7,3 +7,6 @@ sklearn
 dask-ml
 scipy
 seaborn
+cryptography
+pyOpenSSL
+certifi
