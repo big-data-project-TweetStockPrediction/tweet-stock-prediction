@@ -20,3 +20,10 @@ python ./run_unittest.py
 python .\src\tweet_score\model.py
 python .\src\tweet_score\dataLoader.py
 ```
+- Model design
+
+![flow chat of All-in-one Model](https://i.imgur.com/9OGnXY3.png)
+
+- Feature Importance
+
+![](https://i.imgur.com/CSZmfis.png)
